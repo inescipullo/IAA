@@ -101,9 +101,9 @@ class Circular2DUniformDistribution:
 		y_values = []
 		categories = []
 
-		while count["0"] < cat_size and count["1"] < cat_size:
+		while count["0"] < cat_size or count["1"] < cat_size:
 			theta = np.random.uniform(0, 2*np.pi, 1).tolist()[0]
-			radius = np.random.uniform(0, self.radius, 1).tolist()[0]
+			radius = np.sqrt(np.random.uniform(0, self.radius, 1).tolist()[0])
 			category = self._get_category(theta, radius)
 
 			if count[f"{category}"] < cat_size:
@@ -112,20 +112,26 @@ class Circular2DUniformDistribution:
 				y_values.append(radius * np.sin(theta))
 				categories.append(category)
 
-
 		return pd.DataFrame({"X": x_values, "Y": y_values, "Class": categories})
 
-	def _get_category(self, theta, radius):
-		r1 = theta / (4 * np.pi)
-		r2 = (theta * np.pi) / (4 * np.pi)
-		
-		if r1 < radius and radius < r2:
+	def _get_category(self, theta, ro):
+		r1 = self._curve_1(theta)
+		r2 = self._curve_2(theta)
+		if r1 < ro and ro < r2:
 			return 0
 
-		r2p = (theta * np.pi + 2 * np.pi) / (4 * np.pi)
-		if radius > r2p:
+		r1p = self._curve_1(theta + 2 * np.pi)
+		r2p = self._curve_2(theta + 2 * np.pi)
+		if r1p < ro and ro < r2p:
 			return 0
+	
 		return 1
+
+	def _curve_1(self, theta):
+		return theta / (4 * np.pi)
+	
+	def _curve_2(self, theta):
+		return (theta + np.pi) / (4 * np.pi)
 
 
 def plot2(dataframe):
